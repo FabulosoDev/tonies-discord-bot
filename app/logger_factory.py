@@ -1,12 +1,23 @@
 import logging
+import os
 import sys
 from typing import Optional
 
 class LoggerFactory:
     def __init__(self):
-        self.level = logging.INFO
+        # Get log level from environment variable, default to INFO if not set
+        log_level_name = os.getenv('LOG_LEVEL', 'INFO').upper()
+        try:
+            self.level = getattr(logging, log_level_name)
+        except AttributeError:
+            print(f"Invalid log level: {log_level_name}, using INFO")
+            self.level = logging.INFO
+            
         self.handler = logging.StreamHandler(sys.stdout)
         self.handler.setFormatter(_ColourFormatter())
+        
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Logger initialized with level: {log_level_name}")
 
     def get_logger(self, name: str) -> logging.Logger:
         """
