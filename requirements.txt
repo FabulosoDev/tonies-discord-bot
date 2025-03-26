@@ -1,0 +1,4 @@
+discord.py
+httpx
+protobuf
+python-dotenv

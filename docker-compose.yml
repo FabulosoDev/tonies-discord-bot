@@ -1,0 +1,12 @@
+services:
+  tonies-discord-bot:
+    build: .
+    container_name: tonies-discord-bot
+    environment:
+      - CLIENT_CERT_PATH=certs/client.crt
+      - CLIENT_KEY_PATH=certs/client.key
+      - DISCORD_TOKEN=
+      - DISCORD_AUTHOR=
+      - JSON_URL=https://raw.githubusercontent.com/toniebox-reverse-engineering/tonies-json/release/tonies.json    
+    volumes:
+      - ./app/certs:/app/certs
