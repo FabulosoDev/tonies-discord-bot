@@ -1,5 +1,8 @@
 from datetime import datetime, timezone
 import discord
+from logger_factory import DefaultLoggerFactory
+
+logger = DefaultLoggerFactory.get_logger(__name__)
 
 class DiscordEmbed:
     @staticmethod
@@ -31,6 +34,6 @@ class DiscordEmbed:
                 formatted_date = release_date.strftime("%Y-%m-%d")
                 embed.set_footer(text=f"Released: {formatted_date}")
             except (ValueError, TypeError) as e:
-                print(f"Error converting timestamp: {e}")
+                logger.error(f"Error converting timestamp: {e}")
                 
         return embed

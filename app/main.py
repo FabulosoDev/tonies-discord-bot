@@ -5,6 +5,9 @@ from tonies_api import ToniesApi
 from tonies_json import ToniesJson
 from flipper_nfc import FlipperNfc
 from discord_embed import DiscordEmbed
+from logger_factory import DefaultLoggerFactory
+
+logger = DefaultLoggerFactory.get_logger(__name__)
 
 load_dotenv()
 
@@ -18,7 +21,7 @@ client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    print(f'Logged in as {client.user}')
+    logger.info(f'Logged in as {client.user}')
     tonies_json.start_updates()
 
 @client.event
@@ -38,8 +41,8 @@ async def on_message(message):
     
     nfc = FlipperNfc(nfc_text)
     if nfc.is_valid():
-        #print(f"ruid: {nfc.ruid}")
-        #print(f"auth: {nfc.auth}")
+        #logger.debug(f"ruid: {nfc.ruid}")
+        #logger.debug(f"auth: {nfc.auth}")
         result = await tonies_api.get_audio_id(nfc.ruid, nfc.auth)      
         if "audio_id" in result:
             tonie = tonies_json.find_by_audio_id(result["audio_id"])
@@ -49,10 +52,12 @@ async def on_message(message):
                 # Delete the original message after sending the embed
                 await message.delete()
             else:
+                logger.warning(f"No matching tonie found for audio_id: {result['audio_id']}")
                 await message.channel.send("No matching tonie found")
         else:
+            logger.error(f"Error getting audio_id: {result}")
             await message.channel.send(str(result))
     else:
-        print("Could not find UID or Data Content in the file")
+        logger.error("Could not find UID or Data Content in the file")
 
 client.run(os.getenv('DISCORD_TOKEN'))
