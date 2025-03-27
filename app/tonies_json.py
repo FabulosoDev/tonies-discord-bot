@@ -43,15 +43,32 @@ class ToniesJson:
             return None
         
         logger.info(f"Searching for audio_id: {audio_id}")
-        result = next(
-            (item for item in self.json_data 
-             if str(audio_id) in item.get("audio_id", [])), 
-            None
-        )
+
+        for item in self.json_data:
+            for data in item.get("data", []):
+                for id_info in data.get("ids", []):
+                    if id_info.get("audio-id") == int(audio_id):
+                        logger.info(f"Found tonie for audio_id {audio_id}: {data.get('series', 'Unknown')} - {data.get('episode', 'Unknown')}")
+                        return {
+                            "age": data.get("agee", None),
+                            "category": data.get("category", None),
+                            "episode": data.get("episode", None),
+                            "audio_id": id_info.get("audio-id", None),
+                            "confidence": id_info.get("confidence", None),
+                            "hash": id_info.get("hash", None),
+                            "size": id_info.get("size", None),
+                            "tracks": id_info.get("tracks", None),
+                            "image": data.get("image", None),
+                            "language": data.get("language", None),
+                            "origin": data.get("origin", None),
+                            "release": data.get("release"),
+                            "runtime": data.get("runtime", None),
+                            "sample": data.get("sample", None),
+                            "series": data.get("series", None),
+                            "shop_id": data.get("shop-id", None),
+                            "track_desc": data.get("track-desc", []),
+                            "web": data.get("web", None)
+                        }
         
-        if result:
-            logger.info(f"Found tonie for audio_id {audio_id}: {result.get('series', 'Unknown')} - {result.get('episodes', 'Unknown')}")
-        else:
-            logger.warning(f"No tonie found for audio_id: {audio_id}")
-        
-        return result
+        logger.warning(f"No tonie found for audio_id: {audio_id}")
+        return None

@@ -45,17 +45,16 @@ async def on_message(message):
     nfc = FlipperNfc(nfc_text)
     if nfc.is_valid():
         logger.debug(f"Valid NFC data found - RUID: {nfc.ruid}, Auth: {nfc.auth}")
-        result = await tonies_api.get_audio_id(nfc.ruid, nfc.auth)      
+        result = await tonies_api.get_audio_id(nfc.ruid, nfc.auth) 
         if "audio_id" in result:
             tonie = tonies_json.find_by_audio_id(result["audio_id"])
             if tonie:
-                embed = DiscordEmbed.create_tonie_embed(tonie, attachment.url)
+                embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
                 await message.channel.send(embed=embed)
                 logger.info("Sent embed message to Discord channel")
                 await message.delete()
                 logger.debug("Deleted original message")
             else:
-                logger.warning(f"No matching tonie found for audio_id: {result['audio_id']}")
                 await message.channel.send("No matching tonie found")
         else:
             logger.error(f"Error getting audio_id: {result}")

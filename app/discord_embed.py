@@ -6,27 +6,34 @@ logger = DefaultLoggerFactory.get_logger(__name__)
 
 class DiscordEmbed:
     @staticmethod
-    def create_tonie_embed(tonie_data: dict, url: str) -> discord.Embed:
+    def create_tonie_embed(tonie_data: dict, attachment: discord.Attachment) -> discord.Embed:
         """Create a Discord embed message from tonie data"""
         embed = discord.Embed(
-            title=tonie_data.get("episodes", "No episodes available"),
+            title=tonie_data.get("episode", "No episode available"),
             description=tonie_data.get('series', 'No series available'),
-            url=url
+            url=tonie_data.get("web", None),
         )
 
-        if "language" in tonie_data:
+        embed.set_author(name=attachment.filename, url=attachment.url)
+        
+        if tonie_data["age"] is not None:
+            embed.add_field(name="Age", value=f"{tonie_data['age']} years", inline=True)
+
+        if tonie_data["language"] is not None:
             embed.add_field(name="Language", value=tonie_data["language"], inline=True)
 
-        if "category" in tonie_data:
-            embed.add_field(name="Category", value=tonie_data["category"], inline=True)
-        
-        tracks = tonie_data.get("tracks", [])
-        if tracks and len(tracks) > 0:
-            tracks_text = "\n".join(f"{i+1}. {track}" for i, track in enumerate(tracks))
-            embed.add_field(name=f"Tracks [{len(tracks)}]", value=tracks_text, inline=False)
+        if tonie_data["runtime"] is not None:
+            embed.add_field(name="Runtime", value=f"{tonie_data['runtime']} min", inline=True)
 
-        if "pic" in tonie_data:
-            embed.set_thumbnail(url=tonie_data["pic"])
+        if tonie_data["tracks"] is not None:
+            embed.add_field(name="Tracks", value=str(tonie_data["tracks"]), inline=True)          
+
+        if tonie_data["track_desc"]:
+            tracks_list = "\n".join(f"{i+1}. {track}" for i, track in enumerate(tonie_data["track_desc"]))
+            embed.add_field(name="Tracklist", value=tracks_list, inline=False)
+
+        if "image" in tonie_data:
+            embed.set_thumbnail(url=tonie_data["image"])
 
         if "release" in tonie_data:
             try:

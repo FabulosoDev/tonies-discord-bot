@@ -7,7 +7,7 @@ services:
       - CLIENT_KEY_PATH=certs/client.key
       - DISCORD_AUTHOR=
       - DISCORD_TOKEN=
-      - JSON_URL=https://raw.githubusercontent.com/toniebox-reverse-engineering/tonies-json/release/tonies.json
+      - JSON_URL=https://raw.githubusercontent.com/toniebox-reverse-engineering/tonies-json/release/toniesV2.json
       - LOG_LEVEL=INFO
     volumes:
       - ./app/certs:/app/certs
