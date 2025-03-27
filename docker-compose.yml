@@ -9,5 +9,6 @@ services:
       - DISCORD_TOKEN=
       - JSON_URL=https://raw.githubusercontent.com/toniebox-reverse-engineering/tonies-json/release/toniesV2.json
       - LOG_LEVEL=INFO
+    restart: unless-stopped
     volumes:
       - ./app/certs:/app/certs
