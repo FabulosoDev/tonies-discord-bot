@@ -45,7 +45,7 @@ async def on_message(message):
     nfc = FlipperNfc(nfc_text)
     if nfc.is_valid():
         logger.debug(f"Valid NFC data found - RUID: {nfc.ruid}, Auth: {nfc.auth}")
-        result = await tonies_api.get_audio_id(nfc.ruid, nfc.auth) 
+        result = await tonies_api.get_audio_id(nfc.ruid, nfc.auth)
         if "audio_id" in result:
             tonie = tonies_json.find_by_audio_id(result["audio_id"])
             if tonie:
