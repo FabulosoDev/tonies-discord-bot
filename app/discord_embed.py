@@ -9,6 +9,7 @@ class DiscordEmbed:
     def create_tonie_embed(tonie_data: dict, attachment: discord.Attachment) -> discord.Embed:
         """Create a Discord embed message from tonie data"""
         embed = discord.Embed(
+            color=0xd2000e,
             title=tonie_data.get("episode", "No episode available"),
             description=tonie_data.get('series', 'No series available'),
             url=tonie_data.get("web", None),
