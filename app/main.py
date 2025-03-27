@@ -32,16 +32,16 @@ async def on_message(message):
     if not message.attachments:
         logger.debug("Message has no attachments, ignoring")
         return
-        
+
     attachment = message.attachments[0]
     if not attachment.filename.lower().endswith('.nfc'):
         logger.debug(f"Ignoring non-NFC file: {attachment.filename}")
         return
-        
+
     logger.info(f"Processing NFC file: {attachment.filename}")
     nfc_content = await attachment.read()
     nfc_text = nfc_content.decode('utf-8')
-    
+
     nfc = FlipperNfc(nfc_text)
     if nfc.is_valid():
         logger.debug(f"Valid NFC data found - RUID: {nfc.ruid}, Auth: {nfc.auth}")

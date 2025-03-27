@@ -15,7 +15,7 @@ class DiscordEmbed:
         )
 
         embed.set_author(name=attachment.filename, url=attachment.url)
-        
+
         if tonie_data["age"] is not None:
             embed.add_field(name="Age", value=f"{tonie_data['age']} years", inline=True)
 
@@ -26,7 +26,7 @@ class DiscordEmbed:
             embed.add_field(name="Runtime", value=f"{tonie_data['runtime']} min", inline=True)
 
         if tonie_data["tracks"] is not None:
-            embed.add_field(name="Tracks", value=str(tonie_data["tracks"]), inline=True)          
+            embed.add_field(name="Tracks", value=str(tonie_data["tracks"]), inline=True)
 
         if tonie_data["track_desc"]:
             tracks_list = "\n".join(f"{i+1}. {track}" for i, track in enumerate(tonie_data["track_desc"]))
@@ -42,5 +42,5 @@ class DiscordEmbed:
                 embed.set_footer(text=f"Released: {formatted_date}")
             except (ValueError, TypeError) as e:
                 logger.error(f"Error converting timestamp: {e}")
-                
+
         return embed

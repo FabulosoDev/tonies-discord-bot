@@ -60,7 +60,7 @@ class ToniesApi:
                 logger.debug("Parsing protobuf header data")
                 taf_header = TonieboxAudioFileHeader()
                 taf_header.ParseFromString(header_data)
-                
+
                 # Return the audio_id as string
                 audio_id = str(taf_header.audio_id)
                 logger.info(f"Successfully extracted audio_id: {audio_id}")
