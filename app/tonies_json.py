@@ -36,7 +36,7 @@ class ToniesJson:
         logger.info("Starting periodic JSON updates")
         self._update_task = asyncio.create_task(self.fetch_json())
 
-    def find_by_audio_id(self, audio_id: str) -> dict | None:
+    def find_by_audio_id(self, audio_id: str, hash: str) -> dict | None:
         """Find a tonie by its audio_id in the cached JSON data"""
         if not self.json_data:
             logger.warning("No JSON data available for search")
@@ -48,20 +48,23 @@ class ToniesJson:
             for data in item.get("data", []):
                 for id_info in data.get("ids", []):
                     if id_info.get("audio-id") == int(audio_id):
+                        if id_info.get("hash") != hash:
+                            logger.warning(f"Hash mismatch for audio_id {audio_id}: {id_info.get('hash')} != {hash}")
+
                         logger.info(f"Found tonie for audio_id {audio_id}: {data.get('series', 'Unknown')} - {data.get('episode', 'Unknown')}")
                         return {
-                            "age": data.get("agee", None),
+                            "age": data.get("age", None),
                             "category": data.get("category", None),
                             "episode": data.get("episode", None),
-                            "audio_id": id_info.get("audio-id", None),
+                            "audio_id": audio_id,
                             "confidence": id_info.get("confidence", None),
-                            "hash": id_info.get("hash", None),
+                            "hash": hash,
                             "size": id_info.get("size", None),
                             "tracks": id_info.get("tracks", None),
                             "image": data.get("image", None),
                             "language": data.get("language", None),
                             "origin": data.get("origin", None),
-                            "release": data.get("release"),
+                            "release": None,
                             "runtime": data.get("runtime", None),
                             "sample": data.get("sample", None),
                             "series": data.get("series", None),

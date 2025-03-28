@@ -14,7 +14,7 @@ class ToniesApi:
             logger.error("Missing required environment variables: CLIENT_CERT_PATH and/or CLIENT_KEY_PATH")
         logger.debug(f"ToniesApi initialized with cert_path: {self.cert_path}, key_path: {self.key_path}")
 
-    async def get_audio_id(self, ruid: str, auth: str):
+    async def get_audio_id_and_hash(self, ruid: str, auth: str):
         if not ruid:
             logger.error("Missing required parameter: ruid")
             raise ValueError("Missing required parameter: ruid")
@@ -61,10 +61,14 @@ class ToniesApi:
                 taf_header = TonieboxAudioFileHeader()
                 taf_header.ParseFromString(header_data)
 
-                # Return the audio_id as string
+                # Return the audio_id and hash as strings
                 audio_id = str(taf_header.audio_id)
-                logger.info(f"Successfully extracted audio_id: {audio_id}")
-                return {"audio_id": audio_id}
+                hash = taf_header.sha1_hash.hex()
+                logger.info(f"Successfully extracted audio_id: {audio_id} with hash: {hash}")
+                return {
+                    "audio_id": audio_id,
+                    "hash": hash
+                }
             except DecodeError as e:
                 logger.error(f"Failed to parse protobuf data: {str(e)}")
                 return {"error": "Failed to parse protobuf data"}

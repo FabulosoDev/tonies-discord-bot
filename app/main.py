@@ -45,9 +45,9 @@ async def on_message(message):
     nfc = FlipperNfc(nfc_text)
     if nfc.is_valid():
         logger.debug(f"Valid NFC data found - RUID: {nfc.ruid}, Auth: {nfc.auth}")
-        result = await tonies_api.get_audio_id(nfc.ruid, nfc.auth)
-        if "audio_id" in result:
-            tonie = tonies_json.find_by_audio_id(result["audio_id"])
+        result = await tonies_api.get_audio_id_and_hash(nfc.ruid, nfc.auth)
+        if "audio_id" in result and "hash" in result:
+            tonie = tonies_json.find_by_audio_id(result["audio_id"], result["hash"])
             if tonie:
                 embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
                 await message.channel.send(embed=embed)
