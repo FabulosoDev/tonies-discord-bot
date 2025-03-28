@@ -55,7 +55,10 @@ async def on_message(message):
                 await message.delete()
                 logger.debug("Deleted original message")
             else:
-                await message.channel.send("No matching tonie found")
+                tonie = {"audio_id": result["audio_id"], "hash": result["hash"]}
+                embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
+                await message.channel.send(embed=embed)
+                logger.info("Sent embed message to Discord channel")
         else:
             logger.error(f"Error getting audio_id: {result}")
             await message.channel.send(str(result))
