@@ -43,26 +43,31 @@ async def on_message(message):
     nfc_text = nfc_content.decode('utf-8')
 
     nfc = FlipperNfc(nfc_text)
-    if nfc.is_valid():
-        logger.debug(f"Valid NFC data found - RUID: {nfc.ruid}, Auth: {nfc.auth}")
-        result = await tonies_api.get_audio_id_and_hash(nfc.ruid, nfc.auth)
-        if "audio_id" in result and "hash" in result:
-            tonie = tonies_json.find_by_audio_id(result["audio_id"], result["hash"])
-            if tonie:
-                embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
-                await message.channel.send(embed=embed)
-                logger.info("Sent embed message to Discord channel")
-                await message.delete()
-                logger.debug("Deleted original message")
-            else:
-                tonie = {"audio_id": result["audio_id"], "hash": result["hash"]}
-                embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
-                await message.channel.send(embed=embed)
-                logger.info("Sent embed message to Discord channel")
-        else:
-            logger.error(f"Error getting audio_id: {result}")
-            await message.channel.send(str(result))
-    else:
+    if not nfc.is_valid():
         logger.error("Could not find UID or Data Content in the NFC file")
+        return
+
+    if nfc.is_custom_tag():
+        logger.warning(f"Ignoring custom tag with RUID: {nfc.ruid}")
+        return
+
+    logger.debug(f"Valid NFC data found - RUID: {nfc.ruid}, Auth: {nfc.auth}")
+    result = await tonies_api.get_audio_id_and_hash(nfc.ruid, nfc.auth)
+    if "audio_id" in result and "hash" in result:
+        tonie = tonies_json.find_by_audio_id(result["audio_id"], result["hash"])
+        if tonie:
+            embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
+            await message.channel.send(embed=embed)
+            logger.info("Sent embed message to Discord channel")
+            await message.delete()
+            logger.debug("Deleted original message")
+        else:
+            tonie = {"audio_id": result["audio_id"], "hash": result["hash"]}
+            embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
+            await message.channel.send(embed=embed)
+            logger.info("Sent embed message to Discord channel")
+    else:
+        logger.error(f"Error getting audio_id: {result}")
+        await message.channel.send(str(result))
 
 client.run(os.getenv('DISCORD_TOKEN'))

@@ -28,3 +28,9 @@ class FlipperNfc:
     def is_valid(self) -> bool:
         """Check if both UID and auth data are present"""
         return bool(self._ruid and self._auth)
+
+    def is_custom_tag(self) -> bool:
+        """Check if this is a custom tag (auth is all zeros)"""
+        if not self._auth:
+            return False
+        return self._auth == "0" * len(self._auth)
