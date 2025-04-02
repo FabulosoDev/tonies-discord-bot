@@ -6,6 +6,7 @@ from tonies_json import ToniesJson
 from flipper_nfc import FlipperNfc
 from discord_embed import DiscordEmbed
 from logger_factory import DefaultLoggerFactory
+from discord_reply import DiscordReply
 
 logger = DefaultLoggerFactory.get_logger(__name__)
 
@@ -26,9 +27,14 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    # Handle commands in replies first
+    if await DiscordReply.handle_command(message, client):
+        return
+
     if f"{message.author}" != os.getenv('DISCORD_AUTHOR'):
         return
 
+    # Handle NFC file processing
     if not message.attachments:
         logger.debug("Message has no attachments, ignoring")
         return
@@ -55,6 +61,8 @@ async def on_message(message):
     result = await tonies_api.get_audio_id_and_hash(nfc.ruid, nfc.auth)
     if "audio_id" in result and "hash" in result:
         tonie = tonies_json.find_by_audio_id(result["audio_id"], result["hash"])
+        tonie["ruid"] = nfc.ruid
+        tonie["auth"] = nfc.auth
         if tonie:
             embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
             await message.channel.send(embed=embed)
@@ -62,7 +70,7 @@ async def on_message(message):
             await message.delete()
             logger.debug("Deleted original message")
         else:
-            tonie = {"audio_id": result["audio_id"], "hash": result["hash"]}
+            tonie = {"ruid": nfc.ruid, "auth": nfc.auth, "audio_id": result["audio_id"], "hash": result["hash"]}
             embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
             await message.channel.send(embed=embed)
             logger.info("Sent embed message to Discord channel")
