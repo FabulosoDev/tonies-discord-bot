@@ -78,4 +78,8 @@ async def on_message(message):
         logger.error(f"Error getting audio_id: {result}")
         await message.channel.send(str(result))
 
+@DiscordReply.on_add
+async def on_add(tonie_data):
+    logger.info("Callback invoked with data: %s", tonie_data)
+
 client.run(os.getenv('DISCORD_TOKEN'))

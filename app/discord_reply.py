@@ -1,21 +1,44 @@
+import base64
+import json
 import urllib.parse
 import discord
+import asyncio
 from logger_factory import DefaultLoggerFactory
 
 logger = DefaultLoggerFactory.get_logger(__name__)
 
 class DiscordReply:
     CMD_PREFIX = "!"
-    FAKE_DATA_URL = "https://tonies.local/data"
+    FAKE_DATA_URL = "https://tonies.local"
+    on_add_callback = None
 
     @staticmethod
-    def parse_hidden_data(url: str) -> dict:
-        """Parse encoded data from URL"""
+    def on_add(func):
+        """Decorator to register an external add callback."""
+        if asyncio.iscoroutinefunction(func):
+            DiscordReply.on_add_callback = func
+            return func
+        else:
+            return None
+
+    @staticmethod
+    def parse_hidden_data_url(url: str) -> dict:
+        """Parse base64 encoded JSON data from URL"""
         if not url or not url.startswith(DiscordReply.FAKE_DATA_URL):
             return {}
 
-        query = urllib.parse.urlparse(url).query
-        return dict(urllib.parse.parse_qsl(query))
+        try:
+            # Extract base64 data from URL
+            parsed = urllib.parse.urlparse(url)
+            query = dict(urllib.parse.parse_qsl(parsed.query))
+            encoded_data = query.get('data', '')
+
+            # Decode base64 and parse JSON
+            json_data = base64.urlsafe_b64decode(encoded_data).decode()
+            return json.loads(json_data)
+        except Exception as e:
+            logger.error(f"Error decoding tonie data: {e}")
+            return {}
 
     @staticmethod
     async def handle_add_command(message: discord.Message, referenced: discord.Message) -> None:
@@ -31,16 +54,19 @@ class DiscordReply:
             await message.reply("❌ Could not find tonie data")
             return
 
-        tonie_data = DiscordReply.parse_hidden_data(embed.footer.icon_url)
+        tonie_data = DiscordReply.parse_hidden_data_url(embed.footer.icon_url)
         if not tonie_data:
             logger.warning("Could not parse data from URL")
             await message.reply("❌ Invalid data format")
             return
 
-        name_or_ruid = embed.title if embed.title else f"rUID: {tonie_data.get('ruid')}"
+        episode_or_ruid = tonie_data.get("episode") or f"rUID: {tonie_data.get('ruid')}"
 
-        logger.info(f"Adding tonie: {name_or_ruid}")
-        await message.reply(f"✅ Adding tonie: {name_or_ruid}")
+        logger.info(f"Adding tonie: {episode_or_ruid}")
+        await message.reply(f"✅ Adding tonie: {episode_or_ruid}")
+
+        if DiscordReply.on_add_callback is not None:
+            await DiscordReply.on_add_callback(tonie_data)
 
     @staticmethod
     async def get_referenced_message(message: discord.Message, client: discord.Client) -> discord.Message | None:

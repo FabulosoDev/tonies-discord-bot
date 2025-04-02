@@ -1,3 +1,5 @@
+import base64
+import json
 from datetime import datetime, timezone
 import discord
 import urllib.parse
@@ -6,18 +8,18 @@ from logger_factory import DefaultLoggerFactory
 logger = DefaultLoggerFactory.get_logger(__name__)
 
 class DiscordEmbed:
-    FAKE_DATA_URL = "https://tonies.local/data"
+    FAKE_DATA_URL = "https://tonies.local"
 
     @staticmethod
     def create_hidden_data_url(tonie_data: dict) -> str:
-        """Create a URL with encoded tonie data"""
-        encoded_data = urllib.parse.urlencode({
-            "ruid": tonie_data.get("ruid", ""),
-            "auth": tonie_data.get("auth", ""),
-            "audio_id": tonie_data.get("audio_id", ""),
-            "hash": tonie_data.get("hash", "")
-        })
-        return f"{DiscordEmbed.FAKE_DATA_URL}?{encoded_data}"
+        """Create a URL with base64 encoded tonie data"""
+        try:
+            json_data = json.dumps(tonie_data)
+            encoded_data = base64.urlsafe_b64encode(json_data.encode()).decode()
+            return f"{DiscordEmbed.FAKE_DATA_URL}?data={encoded_data}"
+        except Exception as e:
+            logger.error(f"Error encoding tonie data: {e}")
+            return None
 
     @staticmethod
     def create_tonie_embed(tonie_data: dict, attachment: discord.Attachment) -> discord.Embed:
