@@ -62,11 +62,18 @@ class DiscordReply:
 
         episode_or_ruid = tonie_data.get("episode") or f"rUID: {tonie_data.get('ruid')}"
 
-        logger.info(f"Adding tonie: {episode_or_ruid}")
-        await message.reply(f"✅ Adding tonie: {episode_or_ruid}")
-
         if DiscordReply.on_add_callback is not None:
-            await DiscordReply.on_add_callback(tonie_data)
+            result = await DiscordReply.on_add_callback(tonie_data)
+            if result.get("success", False):
+                logger.info(f"Successfully added tonie: {episode_or_ruid}")
+                await message.reply(f"✅ Successfully added tonie: {episode_or_ruid}")
+            else:
+                error = result.get("error", "Unknown error")
+                logger.error(f"Failed to add tonie {episode_or_ruid}: {error}")
+                await message.reply(f"❌ Failed to add tonie: {error}")
+        else:
+            logger.warning("No add callback registered")
+            await message.reply("❌ Add functionality not available")
 
     @staticmethod
     async def get_referenced_message(message: discord.Message, client: discord.Client) -> discord.Message | None:

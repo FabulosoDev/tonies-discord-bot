@@ -7,6 +7,7 @@ from flipper_nfc import FlipperNfc
 from discord_embed import DiscordEmbed
 from logger_factory import DefaultLoggerFactory
 from discord_reply import DiscordReply
+from teddycloud_api import TeddyCloudApi
 
 logger = DefaultLoggerFactory.get_logger(__name__)
 
@@ -14,6 +15,7 @@ load_dotenv()
 
 tonies_api = ToniesApi()
 tonies_json = ToniesJson()
+teddycloud_api = TeddyCloudApi()
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -79,7 +81,28 @@ async def on_message(message):
         await message.channel.send(str(result))
 
 @DiscordReply.on_add
-async def on_add(tonie_data):
-    logger.info("Callback invoked with data: %s", tonie_data)
+async def on_add(tonie_data: dict) -> dict:
+    """Handle adding tonie to TeddyCloud"""
+    episode_or_ruid = tonie_data.get("episode") or f"rUID: {tonie_data.get('ruid')}"
+    logger.info(f"Adding tonie: {episode_or_ruid}")
+
+    if not all(key in tonie_data for key in ['ruid', 'auth']):
+        error = "Missing required tonie data (ruid or auth)"
+        logger.error(error)
+        return {"success": False, "error": error}
+
+    try:
+        result = await teddycloud_api.add_tonie(tonie_data['ruid'], tonie_data['auth'])
+        if not result.get("success", False):
+            error = result.get("error", "Unknown error")
+            logger.error(f"Failed to add tonie: {error}")
+            return {"success": False, "error": error}
+
+        logger.info(f"Successfully added tonie: {episode_or_ruid}")
+        return {"success": True}
+    except Exception as e:
+        error = f"Error adding tonie: {str(e)}"
+        logger.error(error)
+        return {"success": False, "error": error}
 
 client.run(os.getenv('DISCORD_TOKEN'))

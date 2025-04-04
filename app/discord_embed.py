@@ -14,7 +14,15 @@ class DiscordEmbed:
     def create_hidden_data_url(tonie_data: dict) -> str:
         """Create a URL with base64 encoded tonie data"""
         try:
-            json_data = json.dumps(tonie_data)
+            hidden_data = {
+                "ruid": tonie_data.get("ruid"),
+                "auth": tonie_data.get("auth")
+            }
+
+            if episode := tonie_data.get("episode"):
+                hidden_data["episode"] = episode
+
+            json_data = json.dumps(hidden_data)
             encoded_data = base64.urlsafe_b64encode(json_data.encode()).decode()
             return f"{DiscordEmbed.FAKE_DATA_URL}?data={encoded_data}"
         except Exception as e:
