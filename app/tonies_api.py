@@ -8,13 +8,17 @@ logger = DefaultLoggerFactory.get_logger(__name__)
 
 class ToniesApi:
     def __init__(self):
+        """Initialize ToniesApi"""
         self.cert_path = os.getenv("CLIENT_CERT_PATH")
         self.key_path = os.getenv("CLIENT_KEY_PATH")
         if not self.cert_path or not self.key_path:
             logger.error("Missing required environment variables: CLIENT_CERT_PATH and/or CLIENT_KEY_PATH")
+            raise ValueError("Missing required environment variables: CLIENT_CERT_PATH and/or CLIENT_KEY_PATH")
+
         logger.debug(f"ToniesApi initialized with cert_path: {self.cert_path}, key_path: {self.key_path}")
 
     async def get_audio_id_and_hash(self, ruid: str, auth: str):
+        """Get audio_id and hash from the Tonies API using rUID and auth token"""
         if not ruid:
             logger.error("Missing required parameter: ruid")
             raise ValueError("Missing required parameter: ruid")
@@ -30,7 +34,7 @@ class ToniesApi:
 
         async with httpx.AsyncClient(verify=False, cert=(self.cert_path, self.key_path)) as client:
             try:
-                logger.debug(f"Making request to https://prod.de.tbs.toys:443/v2/content/{ruid}")
+                logger.debug(f"Get audio_id and hash with RUID {ruid} from Tonies API")
                 response = await client.get(
                     f"https://prod.de.tbs.toys:443/v2/content/{ruid}",
                     headers=headers

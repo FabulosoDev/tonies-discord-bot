@@ -1,10 +1,34 @@
+import base64
+import json
 from datetime import datetime, timezone
 import discord
+import urllib.parse
 from logger_factory import DefaultLoggerFactory
 
 logger = DefaultLoggerFactory.get_logger(__name__)
 
 class DiscordEmbed:
+    FAKE_DATA_URL = "https://tonies.local"
+
+    @staticmethod
+    def create_hidden_data_url(tonie_data: dict) -> str:
+        """Create a URL with base64 encoded tonie data"""
+        try:
+            hidden_data = {
+                "ruid": tonie_data.get("ruid"),
+                "auth": tonie_data.get("auth")
+            }
+
+            if episode := tonie_data.get("episode"):
+                hidden_data["episode"] = episode
+
+            json_data = json.dumps(hidden_data)
+            encoded_data = base64.urlsafe_b64encode(json_data.encode()).decode()
+            return f"{DiscordEmbed.FAKE_DATA_URL}?data={encoded_data}"
+        except Exception as e:
+            logger.error(f"Error encoding tonie data: {e}")
+            return None
+
     @staticmethod
     def create_tonie_embed(tonie_data: dict, attachment: discord.Attachment) -> discord.Embed:
         """Create a Discord embed message from tonie data"""
@@ -16,6 +40,8 @@ class DiscordEmbed:
         )
 
         embed.set_author(name=attachment.filename, url=attachment.url)
+
+        hidden_data_url = DiscordEmbed.create_hidden_data_url(tonie_data)
 
         if "age" in tonie_data and tonie_data["age"] is not None:
             embed.add_field(name="Age", value=f"{tonie_data['age']} years", inline=True)
@@ -33,12 +59,6 @@ class DiscordEmbed:
             tracks_list = "\n".join(f"{i+1}. {track}" for i, track in enumerate(tonie_data["track_desc"]))
             embed.add_field(name="Tracklist", value=tracks_list, inline=False)
 
-        if "audio_id" in tonie_data and tonie_data["audio_id"] is not None:
-            embed.add_field(name="Audio Id", value=str(tonie_data["audio_id"]), inline=True)
-
-        if "hash" in tonie_data and tonie_data["hash"] is not None:
-            embed.add_field(name="Hash", value=str(tonie_data["hash"]), inline=True)
-
         if "image" in tonie_data and tonie_data["image"] is not None:
             embed.set_thumbnail(url=tonie_data["image"])
 
@@ -46,8 +66,11 @@ class DiscordEmbed:
             try:
                 release_date = datetime.fromtimestamp(int(tonie_data["release"]), tz=timezone.utc)
                 formatted_date = release_date.strftime("%Y-%m-%d")
-                embed.set_footer(text=f"Released: {formatted_date}")
+                embed.set_footer(text=f"Released: {formatted_date}", icon_url=hidden_data_url)
             except (ValueError, TypeError) as e:
                 logger.error(f"Error converting timestamp: {e}")
+                embed.set_footer(text="Released: unknown", icon_url=hidden_data_url)
+        else:
+            embed.set_footer(text="Release date unknown", icon_url=hidden_data_url)
 
         return embed

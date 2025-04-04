@@ -6,6 +6,8 @@ from tonies_json import ToniesJson
 from flipper_nfc import FlipperNfc
 from discord_embed import DiscordEmbed
 from logger_factory import DefaultLoggerFactory
+from discord_reply import DiscordReply
+from teddycloud_api import TeddyCloudApi
 
 logger = DefaultLoggerFactory.get_logger(__name__)
 
@@ -13,6 +15,7 @@ load_dotenv()
 
 tonies_api = ToniesApi()
 tonies_json = ToniesJson()
+teddycloud_api = TeddyCloudApi()
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -26,9 +29,14 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    # Handle commands in replies first
+    if await DiscordReply.handle_command(message, client):
+        return
+
     if f"{message.author}" != os.getenv('DISCORD_AUTHOR'):
         return
 
+    # Handle NFC file processing
     if not message.attachments:
         logger.debug("Message has no attachments, ignoring")
         return
@@ -55,6 +63,8 @@ async def on_message(message):
     result = await tonies_api.get_audio_id_and_hash(nfc.ruid, nfc.auth)
     if "audio_id" in result and "hash" in result:
         tonie = tonies_json.find_by_audio_id(result["audio_id"], result["hash"])
+        tonie["ruid"] = nfc.ruid
+        tonie["auth"] = nfc.auth
         if tonie:
             embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
             await message.channel.send(embed=embed)
@@ -62,12 +72,37 @@ async def on_message(message):
             await message.delete()
             logger.debug("Deleted original message")
         else:
-            tonie = {"audio_id": result["audio_id"], "hash": result["hash"]}
+            tonie = {"ruid": nfc.ruid, "auth": nfc.auth, "audio_id": result["audio_id"], "hash": result["hash"]}
             embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
             await message.channel.send(embed=embed)
             logger.info("Sent embed message to Discord channel")
     else:
         logger.error(f"Error getting audio_id: {result}")
         await message.channel.send(str(result))
+
+@DiscordReply.on_add
+async def on_add(tonie_data: dict) -> dict:
+    """Handle adding tonie to TeddyCloud"""
+    episode_or_ruid = tonie_data.get("episode") or f"rUID: {tonie_data.get('ruid')}"
+    logger.info(f"Adding tonie: {episode_or_ruid}")
+
+    if not all(key in tonie_data for key in ['ruid', 'auth']):
+        error = "Missing required tonie data (ruid or auth)"
+        logger.error(error)
+        return {"success": False, "error": error}
+
+    try:
+        result = await teddycloud_api.add_tonie(tonie_data['ruid'], tonie_data['auth'])
+        if not result.get("success", False):
+            error = result.get("error", "Unknown error")
+            logger.error(f"Failed to add tonie: {error}")
+            return {"success": False, "error": error}
+
+        logger.info(f"Successfully added tonie: {episode_or_ruid}")
+        return {"success": True}
+    except Exception as e:
+        error = f"Error adding tonie: {str(e)}"
+        logger.error(error)
+        return {"success": False, "error": error}
 
 client.run(os.getenv('DISCORD_TOKEN'))
