@@ -61,6 +61,7 @@ class DiscordReply:
             return
 
         episode_or_ruid = tonie_data.get("episode") or f"rUID: {tonie_data.get('ruid')}"
+        logger.info(f"Adding tonie: {episode_or_ruid}")
 
         if DiscordReply.on_add_callback is not None:
             result = await DiscordReply.on_add_callback(tonie_data)

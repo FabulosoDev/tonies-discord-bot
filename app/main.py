@@ -83,9 +83,6 @@ async def on_message(message):
 @DiscordReply.on_add
 async def on_add(tonie_data: dict) -> dict:
     """Handle adding tonie to TeddyCloud"""
-    episode_or_ruid = tonie_data.get("episode") or f"rUID: {tonie_data.get('ruid')}"
-    logger.info(f"Adding tonie: {episode_or_ruid}")
-
     if not all(key in tonie_data for key in ['ruid', 'auth']):
         error = "Missing required tonie data (ruid or auth)"
         logger.error(error)
@@ -98,7 +95,6 @@ async def on_add(tonie_data: dict) -> dict:
             logger.error(f"Failed to add tonie: {error}")
             return {"success": False, "error": error}
 
-        logger.info(f"Successfully added tonie: {episode_or_ruid}")
         return {"success": True}
     except Exception as e:
         error = f"Error adding tonie: {str(e)}"
