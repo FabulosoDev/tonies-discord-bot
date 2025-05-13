@@ -76,6 +76,20 @@ async def on_message(message):
             embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
             await message.channel.send(embed=embed)
             logger.info("Sent embed message to Discord channel")
+
+        # Automatically add tonie to TeddyCloud if TEDDYCLOUD_AUTO_ADD_TONIES is true
+        if os.getenv("TEDDYCLOUD_AUTO_ADD_TONIES", "false").lower() == "true":
+            episode_or_ruid = tonie.get("episode") or f"rUID: {tonie.get('ruid')}"
+            logger.info(f"TEDDYCLOUD_AUTO_ADD_TONIES is enabled, adding tonie: {episode_or_ruid}")
+            add_result = await on_add(tonie)
+            if add_result.get("success", False):
+                logger.info(f"Successfully auto-added tonie: {episode_or_ruid}")
+                await message.channel.send(f"✅ Successfully auto-added tonie: {episode_or_ruid}")
+            else:
+                error = add_result.get("error", "Unknown error")
+                logger.error(f"Failed to auto-add tonie {episode_or_ruid}: {error}")
+                await message.channel.send(f"❌ Failed to auto-add tonie: {error}")
+
     else:
         logger.error(f"Error getting audio_id: {result}")
         await message.channel.send(str(result))
