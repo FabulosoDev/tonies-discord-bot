@@ -10,6 +10,7 @@ services:
       - JSON_URL=https://raw.githubusercontent.com/toniebox-reverse-engineering/tonies-json/release/toniesV2.json
       - LOG_LEVEL=INFO
       - TEDDYCLOUD_API=
+      - TEDDYCLOUD_AUTO_ADD_TONIES=false
     restart: unless-stopped
     volumes:
       - ./app/certs:/app/certs
