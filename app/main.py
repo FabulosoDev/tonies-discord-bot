@@ -63,9 +63,9 @@ async def on_message(message):
     result = await tonies_api.get_audio_id_and_hash(nfc.ruid, nfc.auth)
     if "audio_id" in result and "hash" in result:
         tonie = tonies_json.find_by_audio_id(result["audio_id"], result["hash"])
-        tonie["ruid"] = nfc.ruid
-        tonie["auth"] = nfc.auth
         if tonie:
+            tonie["ruid"] = nfc.ruid
+            tonie["auth"] = nfc.auth
             embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
             await message.channel.send(embed=embed)
             logger.info("Sent embed message to Discord channel")
