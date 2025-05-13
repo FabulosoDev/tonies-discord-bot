@@ -57,6 +57,23 @@ class DiscordEmbed:
 
         if "track_desc" in tonie_data and tonie_data["track_desc"]:
             tracks_list = "\n".join(f"{i+1}. {track}" for i, track in enumerate(tonie_data["track_desc"]))
+
+            # Trim the list if it exceeds 1024 characters
+            if len(tracks_list) > 1024:
+                trimmed_tracks = []
+                current_length = 0
+                more_indicator = "\n...and more"  # Length of the indicator text
+                max_length = 1024 - len(more_indicator)  # Adjust max length to include the indicator
+
+                for i, track in enumerate(tonie_data["track_desc"]):
+                    track_entry = f"{i+1}. {track}"
+                    if current_length + len(track_entry) + 1 > max_length:  # +1 for newline
+                        break
+                    trimmed_tracks.append(track_entry)
+                    current_length += len(track_entry) + 1
+
+                tracks_list = "\n".join(trimmed_tracks) + more_indicator
+
             embed.add_field(name="Tracklist", value=tracks_list, inline=False)
 
         if "image" in tonie_data and tonie_data["image"] is not None:
