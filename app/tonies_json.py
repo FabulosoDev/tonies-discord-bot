@@ -64,7 +64,7 @@ class ToniesJson:
                             "image": data.get("image", None),
                             "language": data.get("language", None),
                             "origin": data.get("origin", None),
-                            "release": None,
+                            "release": data.get("release", None),
                             "runtime": data.get("runtime", None),
                             "sample": data.get("sample", None),
                             "series": data.get("series", None),
