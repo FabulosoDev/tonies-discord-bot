@@ -69,8 +69,11 @@ async def on_message(message):
             embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
             await message.channel.send(embed=embed)
             logger.info("Sent embed message to Discord channel")
-            await message.delete()
-            logger.debug("Deleted original message")
+
+            # Delete the origin message if DISCORD_DELETE_ORIGIN_MESSAGE is true
+            if os.getenv("DISCORD_DELETE_ORIGIN_MESSAGE", "false").lower() == "true":
+                await message.delete()
+                logger.debug("Deleted origin message")
         else:
             tonie = {"ruid": nfc.ruid, "auth": nfc.auth, "audio_id": result["audio_id"], "hash": result["hash"]}
             embed = DiscordEmbed.create_tonie_embed(tonie, attachment)
