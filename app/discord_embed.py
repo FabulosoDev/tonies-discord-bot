@@ -88,6 +88,6 @@ class DiscordEmbed:
                 logger.error(f"Error converting timestamp: {e}")
                 embed.set_footer(text="Released: unknown", icon_url=hidden_data_url)
         else:
-            embed.set_footer(text="Release date unknown", icon_url=hidden_data_url)
+            embed.set_footer(text="Released: unknown", icon_url=hidden_data_url)
 
         return embed
